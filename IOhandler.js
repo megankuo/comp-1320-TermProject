@@ -21,13 +21,10 @@ const unzipper = require('unzipper'),
  * @return {promise}
  */
 const unzip = (pathIn, pathOut) => {
-  // pathIn = ./myfile.zip OR path.join(__dirname, "myfile.zip")
   return new Promise((resolve, reject) => {
-    // read a zip and unzip it
     fs.createReadStream(pathIn)
       .pipe(
         unzipper.Extract({ path: pathOut }).on('close', () => {
-          // show messages "Extraction operation complete"
           console.log('Extraction operation complete');
           resolve();
         })
@@ -44,16 +41,14 @@ const unzip = (pathIn, pathOut) => {
  */
 const readDir = (dir) => {
   return new Promise((resolve, reject) => {
-    // read the directory
     fs.readdir(dir, 'utf-8', (err, files) => {
       if (err) {
         reject(err);
       } else {
-        // returns location of each picture file
         const pngPathArr = [];
         for (let i = 0; i < files.length; i++) {
           if (files[i].includes('.png')) {
-            let pngFilePath = path.join(__dirname, 'unzipped', files[i]); // './unzipped/in1.png'
+            let pngFilePath = path.join(__dirname, 'unzipped', files[i]);
             pngPathArr.push(pngFilePath);
           }
         }
@@ -73,17 +68,12 @@ const readDir = (dir) => {
  */
 const grayScale = (pathIn, pathOut) => {
   return new Promise((resolve, reject) => {
-    // read image path
-    // use pngjs to convert to RAW pixels
     fs.createReadStream(pathIn)
       .pipe(new PNG())
       .on('parsed', function () {
-        // loop through pixels and convert each into grayscale (use algorithm)
         for (let y = 0; y < this.height; y++) {
           for (let x = 0; x < this.width; x++) {
             let idx = (this.width * y + x) << 2;
-
-            // grayscale formula
             let red = this.data[idx];
             let green = this.data[idx + 1];
             let blue = this.data[idx + 2];
@@ -93,7 +83,6 @@ const grayScale = (pathIn, pathOut) => {
             this.data[idx + 2] = gray;
           }
         }
-        // use pngjs to convert back to png file
         resolve(this.pack().pipe(fs.createWriteStream(pathOut)));
       })
       .on('error', reject);
