@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs').promises;
 const formidable = require('formidable');
 const path = require('path');
+const { grayScale } = require('./IOhandler');
 
 const hostname = 'localhost';
 const port = 8080;
@@ -37,12 +38,18 @@ http
     if (req.url == '/fileupload') {
       let form = new formidable.IncomingForm();
       form.parse(req, function (err, fields, files) {
-        let oldPath = files.userImage.path;
-        let newPath = `${__dirname}/uploaded/${files.userImage.name}`;
-        fs.rename(oldPath, newPath);
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.write('File uploaded and moved!');
-        res.end();
+        /****** grayscale without redirecting upload to folder *******/
+        let uploadImg = files.userImage.path;
+        let outputImg = __dirname + '/grayscaled/' + files.userImage.name;
+        grayScale(uploadImg, outputImg);
+      });
+      fs.readFile(__dirname + '/html/success.html').then((content) => {
+        res.end(content);
+      });
+    } else if (req.url == '/css/styles.css') {
+      res.writeHead(200, { 'Content-Type': 'text/css' });
+      fs.readFile(__dirname + '/css/styles.css').then((content) => {
+        res.end(content);
       });
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
