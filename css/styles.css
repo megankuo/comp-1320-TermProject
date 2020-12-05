@@ -23,6 +23,19 @@ form {
   justify-content: center;
 }
 
+section {
+  display: flex;
+  justify-content: space-around;
+}
+
+figure {
+  text-align: center;
+}
+
+img {
+  max-width: 450px;
+}
+
 .button {
   margin: 20px;
   background-color: #44c767;

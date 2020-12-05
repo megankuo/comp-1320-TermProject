@@ -1,63 +1,44 @@
 const http = require('http');
 const fs = require('fs').promises;
 const formidable = require('formidable');
-const path = require('path');
 const { grayScale } = require('./IOhandler');
 
 const hostname = 'localhost';
 const port = 8080;
 
-/* TODO: Make fileUpload modular
-TODO: have CSS show up on server page */
-
-// const fileUpload = (req, res) => {
-//   if (req.url == '/fileupload') {
-//     let form = new formidable.IncomingForm();
-//     form.parse(req, function (err, fields, files) {
-//       let oldPath = files.userImage.path;
-//       let newPath = `${__dirname}/uploaded/${files.userImage.name}`;
-//       fs.rename(oldPath, newPath);
-//       res.writeHead(200, { 'Content-Type': 'text/plain' });
-//       res.write('File uploaded and moved!');
-//       res.end();
-//     });
-//   } else {
-//     res.writeHead(200, { 'Content-Type': 'text/html' });
-//     fs.readFile(__dirname + '/html/index.html').then((content) => {
-//       res.end(content);
-//     });
-//   }
-// };
-
-// module.exports = {
-//   fileUpload,
-// };
-
-http
-  .createServer(function (req, res) {
-    if (req.url == '/fileupload') {
-      let form = new formidable.IncomingForm();
-      form.parse(req, function (err, fields, files) {
-        /****** grayscale without redirecting upload to folder *******/
-        let uploadImg = files.userImage.path;
-        let outputImg = __dirname + '/grayscaled/' + files.userImage.name;
-        grayScale(uploadImg, outputImg);
+const pageHandler = {
+  if (req.url === '/fileupload') {
+      const form = new formidable.IncomingForm();
+      form.parse(req, (err, fields, files) => {
+        const outputImg = `${__dirname}/grayscaled/grayscaled.png`;
+        const inputImg = files.userImage.path;
+        grayScale(inputImg, outputImg);
+        fs.rename(inputImg, `${__dirname}/uploaded/original.png`);
+        fs.readFile(`${__dirname}/html/success.html`).then((content) => res.end(content));
       });
-      fs.readFile(__dirname + '/html/success.html').then((content) => {
+    } else if (req.url === '/css/styles.css') {
+      res.writeHead(200, { 'Content-Type': 'text/css' });
+      fs.readFile(`${__dirname}/css/styles.css`).then((content) => {
         res.end(content);
       });
-    } else if (req.url == '/css/styles.css') {
-      res.writeHead(200, { 'Content-Type': 'text/css' });
-      fs.readFile(__dirname + '/css/styles.css').then((content) => {
+    } else if (req.url.includes('.png')) {
+      const filePath = `.${req.url}`;
+      res.writeHead(200, { 'Content-Type': 'image/png' });
+      fs.readFile(filePath).then((content) => {
+        res.write(content);
+        res.end(content);
+      });
+    } else if (req.url === '/uploaded.html') {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      fs.readFile(`${__dirname}/html/uploaded.html`).then((content) => {
         res.end(content);
       });
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      fs.readFile(__dirname + '/html/index.html').then((content) => {
-        res.end(content);
-      });
+      fs.readFile(`${__dirname}/html/index.html`)
+        .then((content) => {
+          res.end(content);
+        })
+        .catch((err) => console.log(err.message));
     }
-  })
-  .listen(port, hostname, () => {
-    console.log(`Server is running on http://${hostname}:${port}`);
-  });
+  }
